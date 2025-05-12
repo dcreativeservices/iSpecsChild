@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    tools:context=".SettingsActivity">
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Wearer name"
+            android:textColor="@color/black"
+            android:id="@+id/wearer_name_title"
+            android:textSize="18sp"
+            android:layout_centerVertical="true"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/wearer_name_title"
+            android:text="Don iSpecs"
+            android:textSize="18sp"
+            />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Device Address"
+            android:textColor="@color/black"
+            android:id="@+id/device_address_title"
+            android:textSize="18sp"
+            android:layout_centerVertical="true"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/device_address_title"
+            android:text="E6:B0:0C:6F:23"
+            android:textSize="18sp"
+            android:enabled="false"
+            android:textColor="@color/black"
+            />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Initial Blur Delay (secs)"
+            android:textColor="@color/black"
+            android:id="@+id/initial_blur_delay_title"
+            android:textSize="18sp"
+            android:layout_centerVertical="true"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/initial_blur_delay_title"
+            android:text="1"
+            android:textSize="18sp"
+            android:id="@+id/initial_blur_delay_et"
+            android:inputType="number"
+            />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Blur Delay (secs)"
+            android:textColor="@color/black"
+            android:id="@+id/blur_delay_title"
+            android:textSize="18sp"
+            android:layout_centerVertical="true"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/blur_delay_title"
+            android:text="1"
+            android:textSize="18sp"
+            android:id="@+id/blur_delay_et"
+            android:inputType="number"
+            />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Battery alert at %"
+            android:textColor="@color/black"
+            android:id="@+id/battery_alert_title"
+            android:textSize="18sp"
+            android:layout_centerVertical="true"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/battery_alert_title"
+            android:text="20"
+            android:textSize="18sp"
+            android:inputType="number"
+            android:id="@+id/battery_alert_et"
+            />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Blur intensity"
+            android:textColor="@color/black"
+            android:id="@+id/blur_intensity_title"
+            android:textSize="18sp"
+            android:layout_centerVertical="true"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/blur_intensity_title"
+            android:text="80"
+            android:textSize="18sp"
+            android:inputType="number"
+            android:id="@+id/blur_intensity_et"
+            />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Login Passcode"
+            android:textColor="@color/black"
+            android:id="@+id/login_passcode_title"
+            android:textSize="18sp"
+            android:layout_centerVertical="true"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/login_passcode_title"
+            android:text="1234"
+            android:textSize="18sp"
+            android:inputType="number"
+            android:id="@+id/passcode_et"
+            />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp">
+
+        <TextView
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="App Version"
+            android:textColor="@color/black"
+            android:id="@+id/app_version_title"
+            android:textSize="18sp"
+            android:layout_centerVertical="true"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/app_version_title"
+            android:text="1"
+            android:textSize="18sp"
+            android:inputType="number"
+            android:id="@+id/version_txt"
+            />
+
+    </RelativeLayout>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/start_btn"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:text="View logs"
+        android:layout_marginTop="20dp"
+        android:id="@+id/view_logs_btn"
+        />
+
+
+
+
+</LinearLayout>
