@@ -14,5 +14,7 @@
     <color name="gray_bg">#EFEFEF</color>
     <color name="dark_gray">#5B5B5B</color>
     <color name="red">#D32F2F</color>
+    <color name="selected_color">#D1E9FF</color> <!-- light blue or your choice -->
+
 
 </resources>

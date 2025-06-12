@@ -123,9 +123,21 @@ class ScanActivity : AppCompatActivity() {
                 handleDeviceFound(device, rssi, isBLE = true)
             }
 
+//            bluetoothScanner = ClassicBluetoothScanner(this) { device, rssi ->
+//                handleDeviceFound(device, rssi, isBLE = false)
+//            }
+//            bluetoothScanner.startScan()
+
             checkPermissionsSequentially()
 
         }
+
+//        val disconnectTxt = findViewById<TextView>(R.id.disconnect_txt)
+//
+//        disconnectTxt.setOnClickListener {
+//            disconnectDevice()
+//        }
+        //findViewById<TextView>(R.id.scan_txt).setOnClickListener { startScan() }
         findViewById<Button>(R.id.exit_app_btn).setOnClickListener { exitApp() }
 
         findViewById<LinearLayout>(R.id.disconnect_layout).setOnClickListener{
@@ -143,13 +155,63 @@ class ScanActivity : AppCompatActivity() {
 
         }
 
+//        bleScanner = BLEScanner(this) { device, rssi ->
+//            handleDeviceFound(device, rssi)
+//        }
         bleScanner = BLEScanner(this) { device, rssi ->
             handleDeviceFound(device, rssi, isBLE = true)
         }
 
+//        bluetoothScanner = ClassicBluetoothScanner(this) { device, rssi ->
+//            handleDeviceFound(device, rssi, isBLE = false)
+//        }
+//        bluetoothScanner.startScan()
+
         checkPermissionsSequentially()
 
     }
+//    private fun disconnectDevice() {
+//        val disconnectBtn = findViewById<TextView>(R.id.disconnect_txt)
+//        disconnectBtn?.isEnabled = false
+//        disconnectBtn?.text = "Disconnecting..."
+//
+//        try {
+//            bluetoothSocket?.close()
+//            Log.d("Bluetooth", "Socket closed")
+//        } catch (e: IOException) {
+//            Log.e("Bluetooth", "Socket close failed: ${e.message}")
+//        }
+//
+//        bluetoothSocket = null
+//
+//        // Optional: Reset adapter (some phones need this)
+//        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+//        if (bluetoothAdapter != null && !bluetoothAdapter.isEnabled) {
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+//                checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED
+//            ) {
+//
+//                ActivityCompat.requestPermissions(
+//                    this,
+//                    arrayOf(Manifest.permission.BLUETOOTH_SCAN),
+//                    1002
+//                )
+//            }
+//        }
+//        bluetoothAdapter?.disable()
+//        Handler(Looper.getMainLooper()).postDelayed({
+//            bluetoothAdapter?.enable()
+//        }, 1000)
+//
+//        Toast.makeText(this, "Device disconnected", Toast.LENGTH_SHORT).show()
+//
+//        Handler(Looper.getMainLooper()).postDelayed({
+//            val intent = Intent(this, ScanActivity::class.java)
+//            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+//            startActivity(intent)
+//            finish()
+//        }, 1200) // Let the Bluetooth settle before moving
+//    }
 
     private fun startScan() {
         if (!BluetoothUtils.isBluetoothEnabled()) {
@@ -259,6 +321,9 @@ class ScanActivity : AppCompatActivity() {
                     startScan()
                 }
                 .enqueue()
+        }else{
+//            bluetoothAdapter.cancelDiscovery()
+//            connectToClassicDevice(bluetoothDevice)
         }
     }
 
@@ -321,6 +386,83 @@ class ScanActivity : AppCompatActivity() {
 
     private var bluetoothSocket: BluetoothSocket? = null
 
+    @SuppressLint("MissingPermission")
+    fun connectToClassicDevice(device: BluetoothDevice) {
+        // Check permission at runtime for Android 12+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.BLUETOOTH_CONNECT),
+                1001 // your request code
+            )
+            return
+        }
+        try {
+            BluetoothAdapter.getDefaultAdapter()?.cancelDiscovery()
+
+            val uuid = device.uuids?.firstOrNull()?.uuid
+                ?: UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+
+            bluetoothSocket = device.createRfcommSocketToServiceRecord(uuid)
+            bluetoothSocket?.connect()
+            count++
+            val input = bluetoothSocket!!.inputStream
+            val output = bluetoothSocket?.outputStream
+            val reader = BufferedInputStream(input)
+            output?.write("hello".toByteArray()) // Optional
+            setupOnConnected()
+            if (count > 0) {
+
+                Thread {
+                    val buffer = ByteArray(1024)
+                    try {
+                        while (true) {
+                            val buffer = ByteArray(1024)
+
+                            try {
+                                val bytesRead = input.read(buffer)
+                                if (bytesRead > 0) {
+                                    val data = buffer.copyOfRange(0, bytesRead)
+                                    val hex = data.joinToString(" ") { "%02X".format(it) }
+                                    Log.d("BT", "Received: $hex")
+                                }
+                            } catch (e: IOException) {
+                                Log.e("BT", "Error reading input: ${e.message}")
+                            }
+                        }
+                    } catch (e: IOException) {
+                        Log.e("ClassicBT", "Read failed: ${e.message}")
+                    }
+                }.start()
+            }
+
+            runOnUiThread {
+                Log.i("ClassicBT", "Connected to ${device.name}")
+            }
+
+        } catch (e: IOException) {
+            Log.e("ClassicBT", "Connection failed: ${e.message}")
+            try {
+                bluetoothSocket?.close()
+            } catch (_: IOException) {}
+
+            runOnUiThread {
+                progressDialog.dismiss()
+                Log.e("ClassicBT", "Failed to connect")
+
+                val sp = getSharedPreferences(App.PREF_NAME, MODE_PRIVATE).edit()
+                sp.putString(App.CONNECTED_MAC_ADDRESS_PREF, "")
+                sp.putString(App.CONNECTED_DEVICE_NAME_PREF, "")
+                sp.apply()
+
+                selectedDeviceMacAddress = ""
+                selectedDeviceName = ""
+                startScan()
+            }
+        }
+
+    }
 
 
     private fun parseHexData(value: ByteArray) {
