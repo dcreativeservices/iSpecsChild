@@ -236,7 +236,7 @@ class ForegroundService : Service() {
             val userId = sharedPreferences.getString("userId", null) ?: return
 
             val databaseReference: DatabaseReference =
-                FirebaseDatabase.getInstance().getReference("Users").child(userId).child("is_child_app_running")
+                FirebaseDatabase.getInstance().getReference("Children").child(userId).child("is_child_app_running")
 
             databaseReference.setValue(isConnected)
                 .addOnSuccessListener { Log.d("Firebase", "Status updated successfully") }

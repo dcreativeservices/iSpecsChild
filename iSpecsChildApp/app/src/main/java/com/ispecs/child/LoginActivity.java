@@ -25,6 +25,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Map;
+
 public class LoginActivity extends AppCompatActivity {
     private FirebaseDatabase database;
 
@@ -95,24 +97,31 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void findUserIdByParentIdAndPasscode(String parentId, final String passcode, final Callback callback) {
-        DatabaseReference usersRef = database.getReference("Users");
-        Query query = usersRef.orderByChild("parent_id").equalTo(parentId);
+        DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("Children");
+      //  Query query = usersRef.orderByChild("mac").equalTo("53:53:45:4F:00:4F");
 
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+      // Query query = usersRef.orderByChild("parent_ids").equalTo(parentId);
+
+        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                for (DataSnapshot userSnapshot : snapshot.getChildren()) {
-                    String userPasscode = userSnapshot.child("child_passcode").getValue(String.class);
-                    if (passcode.equals(userPasscode)) {
-                        int screenTime = userSnapshot.hasChild("screen_time") ? userSnapshot.child("screen_time").getValue(Integer.class) : 0;
-                        int blur_intensity = userSnapshot.hasChild("blur_intensity") ? userSnapshot.child("blur_intensity").getValue(Integer.class) : 0;
-                        int blur_delay = userSnapshot.hasChild("blur_delay") ? userSnapshot.child("blur_delay").getValue(Integer.class) : 0;
-                        int fade_in = userSnapshot.hasChild("fade_in") ? userSnapshot.child("fade_in").getValue(Integer.class) : 0;
-                        boolean mute = userSnapshot.hasChild("mute") ? userSnapshot.child("mute").getValue(Boolean.class) : true;
-                        callback.onCallback(userSnapshot.getKey(), screenTime, blur_intensity, blur_delay, fade_in, mute );
-                        return;
+                //String mac = snapshot.child("mac").getValue(String.class);
+          //      if("53:53:45:4F:00:4F".equals(mac)) {
+                    for (DataSnapshot userSnapshot : snapshot.getChildren()) {
+                        String userPasscode = userSnapshot.child("passcode").getValue(String.class);
+                        Map<String, Boolean> parentIdsMap = (Map<String, Boolean>) userSnapshot.child("parent_ids").getValue();
+
+                        if (passcode.equals(userPasscode)&&(parentIdsMap != null && parentIdsMap.containsKey(parentId))) {
+                            int screenTime = userSnapshot.hasChild("screen_time") ? userSnapshot.child("screen_time").getValue(Integer.class) : 0;
+                            int blur_intensity = userSnapshot.hasChild("blur_intensity") ? userSnapshot.child("blur_intensity").getValue(Integer.class) : 0;
+                            int blur_delay = userSnapshot.hasChild("blur_delay") ? userSnapshot.child("blur_delay").getValue(Integer.class) : 0;
+                            int fade_in = userSnapshot.hasChild("fade_in") ? userSnapshot.child("fade_in").getValue(Integer.class) : 0;
+                            boolean mute = userSnapshot.hasChild("mute") ? userSnapshot.child("mute").getValue(Boolean.class) : true;
+                            callback.onCallback(userSnapshot.getKey(), screenTime, blur_intensity, blur_delay, fade_in, mute);
+                            return;
+                        }
                     }
-                }
+            //    }
                 callback.onCallback(null, 2 ,2 , 2, 2, true); // No matching user found
             }
 

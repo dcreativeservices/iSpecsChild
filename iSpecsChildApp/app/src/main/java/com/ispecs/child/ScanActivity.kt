@@ -16,7 +16,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.View
@@ -28,15 +27,19 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.ispecs.child.ble.BLEScanner
 import com.ispecs.child.ble.MyBleManager
 import com.ispecs.child.models.Device
+import com.ispecs.child.utils.BLEUtils
 import com.ispecs.child.utils.BluetoothUtils
 import com.ispecs.child.utils.DialogUtils
 import com.ispecs.child.utils.LocationUtils
@@ -44,15 +47,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.BufferedInputStream
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.InputStreamReader
-import java.util.UUID
 
 class ScanActivity : AppCompatActivity() {
 
@@ -70,8 +64,13 @@ class ScanActivity : AppCompatActivity() {
     private var selectedDeviceMacAddress: String = ""
     private var selectedDeviceName: String = ""
     private var clearConnectedDevice = false
-
+    private lateinit var btnRefresh: ImageButton
     private lateinit var bleManager: MyBleManager
+
+    private var lastDeviceMac: String? = ""
+    private var isDeviceConnected = false
+
+    private lateinit var selectedDevMacAdd: String
 
     private val permissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
     private var bluetoothDevice: BluetoothDevice? = null
@@ -84,7 +83,6 @@ class ScanActivity : AppCompatActivity() {
     private var batteryPercentage = 0
 
     private val REQUEST_BLUETOOTH_PERMISSION = 101
-    private lateinit var bluetoothScanner: ClassicBluetoothScanner
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -113,19 +111,7 @@ class ScanActivity : AppCompatActivity() {
         adapter = DeviceListAdapter()
         recyclerView.adapter = adapter
 
-        val btnRefresh = findViewById<ImageButton>(R.id.btnRefresh)
-        btnRefresh.setOnClickListener {
-            btnRefresh.animate()
-                .rotationBy(360f)
-                .setDuration(1000)  // duration in milliseconds
-                .start()
-            bleScanner = BLEScanner(this) { device, rssi ->
-                handleDeviceFound(device, rssi, isBLE = true)
-            }
 
-            checkPermissionsSequentially()
-
-        }
         findViewById<Button>(R.id.exit_app_btn).setOnClickListener { exitApp() }
 
         findViewById<LinearLayout>(R.id.disconnect_layout).setOnClickListener{
@@ -139,18 +125,29 @@ class ScanActivity : AppCompatActivity() {
             // clear selected device local variables
             selectedDeviceName = ""
             selectedDeviceMacAddress = ""
+            BLEUtils.saveMacAddress(this, selectedDeviceMacAddress)
             bleManager.disconnectDevice()
 
         }
 
-        bleScanner = BLEScanner(this) { device, rssi ->
-            handleDeviceFound(device, rssi, isBLE = true)
-        }
+            scanning()
+        btnRefresh = findViewById(R.id.btnRefresh)
 
+        btnRefresh.setOnClickListener { deviceList.clear()
+            btnRefresh.animate()
+                .rotationBy(360f)
+                .setDuration(1000)  // duration in milliseconds
+                .start()
+                scanning()
+        }
         checkPermissionsSequentially()
 
     }
-
+    private fun scanning(){
+        bleScanner = BLEScanner(this) { device, rssi ->
+            handleDeviceFound(device, rssi, isBLE = true)
+        }
+    }
     private fun startScan() {
         if (!BluetoothUtils.isBluetoothEnabled()) {
             DialogUtils.showDialog(this, "Note", "Please turn on Bluetooth to scan nearby BLE devices")
@@ -196,6 +193,17 @@ class ScanActivity : AppCompatActivity() {
 
         scanHeaderLayout.visibility = View.VISIBLE
         recyclerView.visibility = View.VISIBLE
+        btnRefresh.visibility=View.VISIBLE
+        lastDeviceMac = BLEUtils.loadMacAddress(this)
+
+        if (device.address == lastDeviceMac) {
+                // Stop scanning first
+            bleScanner.stopScan()
+            selectedDeviceMacAddress = device.address
+            selectedDeviceName = device.name ?: "Unknown"
+            connectBLE()
+        }
+
 
         // ✅ Proceed if permission is granted
         if (!deviceList.any { it.address == device.address } && device.name != null) {
@@ -245,6 +253,8 @@ class ScanActivity : AppCompatActivity() {
                 .retry(3, 1000)
                 .done {
                     setupOnConnected()
+                    selectedDevMacAdd=bluetoothDevice.address
+                    BLEUtils.saveMacAddress(this, selectedDeviceMacAddress)
                 }
                 .fail { _, _ ->
                     progressDialog.dismiss()
@@ -261,16 +271,25 @@ class ScanActivity : AppCompatActivity() {
                 .enqueue()
         }
     }
-
+    private fun clearScanUI() {
+        scanHeaderLayout.visibility = View.GONE
+        recyclerView.visibility = View.GONE
+       // connectBtn.visibility = View.GONE
+      //  scanBtn.visibility = View.GONE
+        btnRefresh.visibility = View.GONE // now this will work
+    }
 
     private fun setupOnConnected() {
-        recyclerView.visibility = View.INVISIBLE
+        /*recyclerView.visibility = View.INVISIBLE
         scanHeaderLayout.visibility = View.INVISIBLE
+        btnRefresh.visibility=View.INVISIBLE*/
+        isDeviceConnected=true
+        clearScanUI()
         progressDialog.dismiss()
         connectedDeviceLayout.visibility = View.VISIBLE
         exitAppBtn.visibility = View.VISIBLE
         mac=maskMacAddress(selectedDeviceMacAddress)
-        findViewById<TextView>(R.id.connected_to_txt).text = selectedDeviceName+"_"+mac
+        findViewById<TextView>(R.id.connected_to_txt).text = selectedDeviceName+"\n"+mac
        // findViewById<TextView>(R.id.mac).text = mac+""
         sharedPreferences.edit()
             .putString(App.CONNECTED_MAC_ADDRESS_PREF, selectedDeviceMacAddress)
@@ -560,9 +579,8 @@ class ScanActivity : AppCompatActivity() {
         override fun getItemCount() = deviceList.size
     }
     fun maskMacAddress(mac: String): String {
-        if (mac.length < 2) return mac // fallback for invalid MAC
-        val visiblePart = mac.takeLast(2)
-        val maskedPart = "*".repeat(mac.length - 2)
-        return visiblePart
+        val segments = mac.split(':')
+        val last = segments.last()
+        return "**:**:**:$last"
     }
 }

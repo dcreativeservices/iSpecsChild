@@ -81,8 +81,9 @@ public class WindowNoUI {
     }
 
     public void updateBlurSettings() {
+
         SharedPreferences sp = context.getSharedPreferences(App.PREF_NAME , MODE_PRIVATE);
-        int blur_percentage = sp.getInt(App.BLUR_INTENSITY_PREF, 80);
+        int blur_percentage = sp.getInt(App.BLUR_INTENSITY_PREF, 10);
         int fade_in_delay = sp.getInt("fade_in", 5);
         mute = sp.getBoolean("mute", true);
 
@@ -166,6 +167,7 @@ public class WindowNoUI {
     }
 
     public void close() {
+        updateBlurSettings();
 
         try {
             AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
@@ -198,7 +200,7 @@ public class WindowNoUI {
 
             // the above steps are necessary when you are adding and removing
             // the view simultaneously, it might give some exceptions
-
+        //TRACKING ACTIVITY
 
         } catch (Exception e) {
             Log.d("Error2",e.toString());
