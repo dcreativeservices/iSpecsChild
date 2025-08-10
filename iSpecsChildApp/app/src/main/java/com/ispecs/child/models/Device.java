@@ -6,10 +6,21 @@ public class Device {
     private String address;
     private String rssi;
 
-    public Device(String name, String address, String rssi) {
+    private String status;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Device(String name, String address, String rssi,String status) {
         this.name = name;
         this.address = address;
         this.rssi = rssi;
+        this.status=status;
     }
 
     public void setAddress(String address) {

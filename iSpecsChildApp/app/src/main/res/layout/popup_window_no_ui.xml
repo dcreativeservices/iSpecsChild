@@ -1,27 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="4dp"
-    android:gravity="center"
-    >
+    android:gravity="center">
 
-    <FrameLayout
+    <!-- ✅ Blurred bitmap will be drawn here -->
+    <ImageView
+        android:id="@+id/blur_background"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/teal_700"
-        android:id="@+id/overlay_layout"/>
+        android:scaleType="centerCrop"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true" />
 
+    <!-- ✅ Your original overlay background -->
+    <FrameLayout
+        android:id="@+id/overlay_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/teal_700" />
+
+    <!-- Message content -->
     <LinearLayout
+        android:id="@+id/overlay_message_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@color/white"
         android:layout_centerInParent="true"
         android:orientation="vertical"
-        android:padding="20dp"
-        android:id="@+id/overlay_message_layout">
+        android:background="@color/white"
+        android:padding="20dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -33,29 +45,27 @@
             android:layout_gravity="center"/>
 
         <TextView
+            android:id="@+id/alert_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=""
-            android:id="@+id/alert_message"
             android:textColor="@color/gray"
             android:textSize="18sp"
             android:layout_gravity="center"
             android:gravity="center"
-            android:layout_marginTop="10dp"
-            />
+            android:layout_marginTop="10dp" />
     </LinearLayout>
 
+    <!-- FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_app_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:theme="@style/Theme.MaterialComponents.Light"
-        android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
         android:src="@drawable/glasses"
         app:tint="@color/white"
         app:backgroundTint="@color/primary"
         app:fabSize="normal"
-        android:id="@+id/fab_app_icon"
-        />
-
+        android:theme="@style/Theme.MaterialComponents.Light" />
 </RelativeLayout>

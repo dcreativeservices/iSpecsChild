@@ -6,6 +6,7 @@ import static android.content.Context.WINDOW_SERVICE;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.media.AudioManager;
@@ -18,6 +19,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -80,7 +82,49 @@ public class WindowNoUI {
        updateBlurSettings();
     }
 
+    private boolean isBlurring = false;
+
     public void updateBlurSettings() {
+        if (isBlurring) return; // Prevent duplicate blur calls
+        isBlurring = true;
+
+        SharedPreferences sp = context.getSharedPreferences(App.PREF_NAME, Context.MODE_PRIVATE);
+        int blur_percentage = sp.getInt(App.BLUR_INTENSITY_PREF, 10);
+        int fade_in_delay = sp.getInt("fade_in", 5);
+        mute = sp.getBoolean("mute", true);
+
+        FrameLayout overlay_layout = mView.findViewById(R.id.overlay_layout);
+        overlay_layout.setBackgroundColor(Color.parseColor("#" + getBlur(blur_percentage) + "ffffff"));
+
+        // Step 1: Manually capture the view into a bitmap
+        overlay_layout.setDrawingCacheEnabled(true);
+        overlay_layout.buildDrawingCache();
+        Bitmap cachedBitmap = overlay_layout.getDrawingCache();
+
+        if (cachedBitmap != null) {
+            // Step 2: Create a safe copy
+            Bitmap safeBitmap = Bitmap.createBitmap(cachedBitmap);
+            overlay_layout.setDrawingCacheEnabled(false); // Reset drawing cache
+            ImageView blur_background = mView.findViewById(R.id.blur_background);
+            // Step 3: Apply the blur safely
+            Blurry.with(context)
+                    .radius(10)
+                    .sampling(8)
+                    .color(Color.parseColor("#" + getBlur(blur_percentage) + "ffffff"))
+                    .async()
+                    .animate(fade_in_delay * 100)
+                    .from(safeBitmap)
+                    .into(blur_background);
+        }
+
+        // Step 4: Unlock after delay
+        overlay_layout.postDelayed(() -> {
+            isBlurring = false;
+        }, 1500); // Prevent blur flooding for 1.5s
+    }
+
+
+    /*public void updateBlurSettings() {
 
         SharedPreferences sp = context.getSharedPreferences(App.PREF_NAME , MODE_PRIVATE);
         int blur_percentage = sp.getInt(App.BLUR_INTENSITY_PREF, 10);
@@ -98,7 +142,7 @@ public class WindowNoUI {
                 .async()
                 .animate(fade_in_delay* 100)
                 .onto(overlay_layout);
-    }
+    }*/
 
     public void setAlertMessage(String message){
         if(mView != null){
@@ -168,6 +212,28 @@ public class WindowNoUI {
 
     public void close() {
         updateBlurSettings();
+        try {
+            AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                am.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE, 0);
+            } else {
+                am.setStreamMute(AudioManager.STREAM_MUSIC, false);
+            }
+
+            // ✅ Remove view from WindowManager so touch returns
+            if (mView.getWindowToken() != null) {
+                mWindowManager.removeView(mView);
+            }
+
+        } catch (Exception e) {
+            Log.e("WindowNoUI", "Error closing overlay", e);
+        }
+    }
+
+
+    /*public void close() {
+        updateBlurSettings();
 
         try {
             AudioManager am = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
@@ -178,11 +244,6 @@ public class WindowNoUI {
                 am.setStreamMute(AudioManager.STREAM_MUSIC, false);
             }
 
-            // remove the view from the window
-            //((WindowManager)context.getSystemService(WINDOW_SERVICE)).removeView(mView);
-            // invalidate the view
-            //mView.invalidate();
-            // remove all views
             FrameLayout overlay_layout = mView.findViewById(R.id.overlay_layout);
             overlay_layout.setVisibility(View.GONE);
 
@@ -191,21 +252,11 @@ public class WindowNoUI {
 
             FloatingActionButton fab_app_icon = mView.findViewById(R.id.fab_app_icon);
             fab_app_icon.setVisibility(View.GONE);
-            //((ViewGroup)mView).removeView(overlay_layout);
-
-            //mView.invalidate();
-
-            //mWindowManager.addView(mView, mParams);
-
-
-            // the above steps are necessary when you are adding and removing
-            // the view simultaneously, it might give some exceptions
-        //TRACKING ACTIVITY
 
         } catch (Exception e) {
             Log.d("Error2",e.toString());
         }
-    }
+    }*/
 
     public void stop() {
         try {

@@ -7,6 +7,8 @@ import android.content.Context
 import android.os.Looper
 import android.util.Log
 import com.ispecs.child.App
+import com.ispecs.child.ForegroundService
+import com.ispecs.child.ForegroundService.Companion.iSpceDeviceConnectionStatus
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.data.Data
 import java.util.*
@@ -59,14 +61,15 @@ class MyBleManager(context: Context) : BleManager(context) {
 
             override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
                 val service = gatt.getService(UUID.fromString(App.DATA_SERVICE_UUID))
+                val service1 = gatt.getService(UUID.fromString(App.WRITE_SERVICE_UUID))
                 if (service != null) {
-                    //writeCharacteristic = service.getCharacteristic(UUID.fromString(App.WRITE_CHAR_UUID))
+                    writeCharacteristic = service1.getCharacteristic(UUID.fromString(App.WRITE_CHAR_UUID))
                     notifyCharacteristic = service.getCharacteristic(UUID.fromString(App.DATA_CHAR_UUID))
                     //indicateCharacteristic = service.getCharacteristic(UUID.fromString(App.LOGS_CHAR_UUID))
                 }
                 //return writeCharacteristic != null && notifyCharacteristic != null && indicateCharacteristic != null
 
-                return notifyCharacteristic != null
+                return writeCharacteristic != null && notifyCharacteristic != null
             }
 
             override fun onServicesInvalidated() {
@@ -76,9 +79,10 @@ class MyBleManager(context: Context) : BleManager(context) {
             }
 
 
-            override fun onDeviceDisconnected() {
+           override fun onDeviceDisconnected() {
                 Log.d("MyBleManager", "❌ Device Disconnected!")
                 connectionStateListener?.invoke(ConnectionState.DISCONNECTED)
+             //   iSpceDeviceConnectionStatus(context, "inactive")
             }
 
 
@@ -138,8 +142,9 @@ class MyBleManager(context: Context) : BleManager(context) {
 
     /** ✅ **Public function to write data to a characteristic** */
     fun writeCharacteristic(serviceUUID: String, charUUID: String, data: ByteArray) {
-        val characteristic = writeCharacteristic ?: return
-        writeCharacteristic(characteristic, Data(data))
+        val targetCharacteristic  = writeCharacteristic ?: return
+        //
+        writeCharacteristic(targetCharacteristic , Data(data))
             .done { Log.d("MyBleManager", "Data written successfully") }
             .fail { _, _ -> Log.e("MyBleManager", "Failed to write data") }
             .enqueue()

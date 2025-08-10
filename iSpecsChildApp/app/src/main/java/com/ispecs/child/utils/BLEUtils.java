@@ -4,8 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 public class BLEUtils {
-    private static final String PREF_NAME = "your_pref_file_name";
-    private static final String KEY_MAC_ADDRESS = "CONNECTED_MAC_ADDRESS_PREF";
+    public static final String PREF_NAME = "child";
+    public static final String KEY_MAC_ADDRESS = "CONNECTED_MAC_ADDRESS_PREF";
 
     // Save MAC
     public static void saveMacAddress(Context context, String mac) {

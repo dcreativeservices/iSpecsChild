@@ -12,8 +12,8 @@ android {
         applicationId "com.ispecs.child"
         minSdk 23
         targetSdk 34
-        versionCode 24
-        versionName "1.24"
+        versionCode 43
+        versionName "1.45_8_6_25_21_40"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -22,6 +22,14 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            applicationVariants.all { variant ->
+                if (variant.buildType.name == "release") {
+                    variant.outputs.all {
+                        outputFileName = "Child-App-v1.45_8_6_25_21_40.apk"
+                    }
+                }
+            }
         }
     }
     compileOptions {
@@ -48,6 +56,9 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment:2.4.1'
     implementation 'androidx.navigation:navigation-ui:2.4.1'
     implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'com.google.firebase:firebase-firestore:24.11.0'
+    implementation 'com.google.firebase:firebase-firestore-ktx:2.9.0'
+
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
@@ -63,6 +74,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-database'
-
-
+    implementation 'androidx.work:work-runtime:2.9.0'
+    implementation 'com.google.firebase:firebase-messaging'
 }
